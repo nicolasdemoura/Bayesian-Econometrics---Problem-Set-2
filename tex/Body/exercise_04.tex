@@ -1,7 +1,7 @@
 
 We estimated the full posterior distribution of the $3 \times 3$ autoregressive matrix $\mathbf{A}$ using the MCMC sampler described earlier. The posterior density for each element $A_{ij}$ was approximated via a histogram over the MCMC draws (after burn-in).
 
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.32\textwidth]{../figures/post_A11.png}
     \includegraphics[width=0.32\textwidth]{../figures/post_A12.png}
@@ -16,3 +16,5 @@ We estimated the full posterior distribution of the $3 \times 3$ autoregressive 
     \includegraphics[width=0.32\textwidth]{../figures/post_A33.png}
     \caption{Posterior densities for the elements of $\mathbf{A}$.}
 \end{figure}
+
+As we can see, the diagonal elements of $\mathbf{A}$ are centered around 0.9, indicating strong persistence in the latent factors. The off-diagonal elements are centered around 0, suggesting that the factors are not strongly correlated with each other. This is consistent with the findings of \citet{diebold2006macroeconomy}, who also found that the autoregressive coefficients were close to 1 for the diagonal elements and close to 0 for the off-diagonal elements.

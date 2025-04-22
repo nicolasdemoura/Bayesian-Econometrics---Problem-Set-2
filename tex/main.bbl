@@ -6,15 +6,9 @@ Diebold, F.~X., G.~D. Rudebusch, and S.~B. Aruoba (2006).
 \newblock The macroeconomy and the yield curve.
 \newblock {\em Journal of Econometrics\/}~{\em 131\/}(1-2), 309--338.
 
-\bibitem[\protect\citeauthoryear{Koop}{Koop}{2010}]{koop2010bayesian}
+\bibitem[\protect\citeauthoryear{Koop}{Koop}{2010}]{koop2010}
 Koop, G. (2010).
-\newblock {\em Bayesian Econometrics}.
-\newblock John Wiley \& Sons.
-
-\bibitem[\protect\citeauthoryear{Nelson and Siegel}{Nelson and
-  Siegel}{1987}]{nelson1987}
-Nelson, C.~R. and A.~F. Siegel (1987, January).
-\newblock Parsimonious {Modeling} of {Yield} {Curves}.
-\newblock {\em The Journal of Business\/}~{\em 60\/}(4), 473.
+\newblock {\em Bayesian econometrics\/} (Reprinted with corr., [Nachdr.] ed.).
+\newblock Chichester: Wiley.
 
 \end{thebibliography}

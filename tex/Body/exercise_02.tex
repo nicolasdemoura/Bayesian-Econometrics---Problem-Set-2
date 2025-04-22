@@ -1,7 +1,5 @@
 Propose a MCMC sampler for the model parameters.
 
-\section{MCMC Sampling Algorithm}
-
 We implement a Metropolis-Hastings within Gibbs sampler to draw from the joint posterior distribution of the model parameters and latent states. The algorithm iteratively updates each block of parameters conditional on the others. Let $\mathbf{\beta}_{1:T}$ denote the sequence of latent states and let $\mathbf{y}_{1:T}$ denote the observed yields.
 
 At each iteration $s$, we sample:
@@ -51,7 +49,7 @@ We propose a new value $A'$ from a random-walk Metropolis step on the unconstrai
 \text{vec}(A') &\sim N(\text{vec}(A), \Sigma_A)
 \end{align*}
 
-To enforce stationarity, we rescale eigenvalues of $A'$ if necessary. The acceptance probability is computed as:
+To enforce stationarity, we rescale eigenvalues of $A'$ if necessary. More specifically, we comupte de LDL decomposition of $A'$ and if the greatest eigenvalue is greater  than 1 (in absolute value), we rescale all eigenvalues to be less than 1, otherwise we keep it as is. This ensures that the proposed $A'$ is stationary. The acceptance probability is computed as:
 
 \begin{align*}
 \alpha &= \min\left(1, \frac{p(\mathbf{\beta}_{2:T} \mid \mathbf{\beta}_{1:T-1}, \mu, A', Q)}{p(\mathbf{\beta}_{2:T} \mid \mathbf{\beta}_{1:T-1}, \mu, A, Q)} \cdot \frac{p(A')}{p(A)} \right)
@@ -113,7 +111,7 @@ The log-posterior is:
 \log p(\lambda \mid \cdot) &\propto \sum_{t=1}^{T} \log N(\mathbf{y}_t; \Lambda_t(\lambda) \mathbf{\beta}_t, H) + \log G(\lambda; \alpha, \beta) + \log \left| \frac{\partial \lambda}{\partial \log \lambda} \right|
 \end{align*}
 
-where the last term is the Jacobian correction. We assume:
+where the last term is the Jacobian correction, following \cite{koop2010}. We assume:
 
 \begin{align*}
 \lambda &\sim G(4, 50)
