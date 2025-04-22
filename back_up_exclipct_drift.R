@@ -80,6 +80,13 @@ for (i in 1:n_obs) {
     )
 }
 
+# Define zero matrices with appropriate dimensions
+zero_state_obs <- matrix(0, nrow = n_obs, ncol = n_state)
+zero_state_state <- matrix(0, nrow = n_state, ncol = n_state)
+
+# Combine matrices to form the full Z matrix
+Z_tilde <- rbind(cbind(Z, Z))
+
 # Number of parameters to estimate:
 # - A: 9 elements (3x3)
 # - Q: 6 elements (Cholesky factor of 3x3)
@@ -91,7 +98,11 @@ A_init <- diag(0.9, 3)
 Q_init <- diag(0.1, 3)
 H_init <- diag(0.1, n_obs)
 
-model <- SSModel(y ~ -1 + SSMcustom(Z = Z, T = A_init, Q = Q_init, P1 = diag(100, 3), a1 = rep(0, 3)), H = H_init)
+A_tilde_init <- rbind(cbind(A_init, zero_state_state), cbind(zero_state_state, zero_state_state))
+Q_tilde_init <- rbind(cbind(Q_init, zero_state_state), cbind(zero_state_state, zero_state_state))
+H_tilde_init <- H_init
+
+model <- SSModel(y ~ -1 + SSMcustom(Z = Z_tilde, T = A_tilde_init, Q = Q_tilde_init, P1 = diag(100, n_state*2), a1 = rep(0, n_state*2)), H = H_tilde_init)
 
 # Define update function
 update_fn <- function(pars, model) {
@@ -101,8 +112,9 @@ update_fn <- function(pars, model) {
     vals <- eigs$values
     vals <- 0.98 * vals / max(Mod(vals))    # rescale to ensure stationarity
     A_stable <- eigs$vectors %*% diag(vals) %*% solve(eigs$vectors)
-    storage.mode(A_stable) <- "double"
-    model$T[,,1] <- A_stable
+    A_tilde_stable <- rbind(cbind(A_stable, zero_state_state), cbind(zero_state_state, zero_state_state))
+    storage.mode(A_tilde_stable) <- "double"
+    model$T[,,1] <- A_tilde_stable
 
     # Q = L %*% t(L), L lower triangular
     L <- matrix(0, 3, 3)
@@ -111,13 +123,15 @@ update_fn <- function(pars, model) {
     L[3,1] <- pars[13]; L[3,2] <- pars[14]; L[3,3] <- pars[15]
     Q_est <- L %*% t(L)
     storage.mode(Q_est) <- "double"
-    model$Q[,,1] <- Q_est
+    Q_tilde_est <- rbind(cbind(Q_est, zero_state_state), cbind(zero_state_state, zero_state_state))
+    model$Q[,,1] <- Q_tilde_est
 
     # H diagonal with positive entries
     H_diag <- exp(pars[16:(15 + n_obs)])
     H_mat <- diag(H_diag)
     storage.mode(H_mat) <- "double"
-    model$H[,,1] <- H_mat
+    H_tilde_mat <- H_mat
+    model$H[,,1] <- H_tilde_mat
 
     return(model)
 }
@@ -132,8 +146,7 @@ kfs <- KFS(fit$model, smoothing = c("state", "disturbance"))
 
 # Plot the smoothed state estimates against the true values
 ggplot2::ggplot() +
-    geom_line(aes(x = 1:N, y = kfs$alphahat[, 2]), color = "blue") +
-    geom_line(aes(x = 1:N, y = ds$beta[, 2]), color = "red") +
+    geom_line(aes(x = 1:N, y = kfs$alphahat[, 5]), color = "blue") +
     labs(title = "Smoothed State Estimates vs True Values",
          x = "Time",
          y = "State Estimate") +

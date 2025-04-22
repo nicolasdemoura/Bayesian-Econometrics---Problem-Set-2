@@ -1,0 +1,182 @@
+\newcommand{\BRL}{\text{R}\$}
+
+%\game: fazer matrix de payoff bonita
+\newcounter{nblin}
+\newcounter{nbcol}
+\newcounter{nbcoltwo}
+\newcounter{contest}
+\newcounter{contpay}
+
+% \game[Alice, Bob][{Up, Middle, Down},{Left, Center, Right}][{3/3,1/2,0/2},{2/1,2/2,-1/3},{2/0,3/-1,-1/-1}]
+\newcommand{\gameCell}[2]{({\color{blue} #1},{\color{red} #2})}
+\newcommand{\gamePlayer}[2]{{\color{blue} #1}{\color{red} #2}}
+\makeatletter
+\def\game[#1,#2][#3,#4][#5]{
+    \setcounter{nblin}{0}
+    \setcounter{nbcol}{0}
+    \setcounter{nbcoltwo}{0}
+    \setcounter{contest}{0}
+    \setcounter{contpay}{0}
+
+    % #1 = Jogador 1
+    % #2 = Jogador 2
+    % #3 = Estratégias de 1
+    % #4 = Estratégias de 2
+    % #5 = Matrix de payoffs
+    % #6 = bool(0: se sem linhas, 1: com linhas e na diagonal)
+    \foreach \j in {#3} {
+
+      \addtocounter{nblin}{1}
+    }
+    \foreach \j in {#4} {
+        \addtocounter{nbcol}{1}
+    }
+    \addtocounter{nbcol}{2}
+    \setcounter{nbcoltwo}{\thenbcol}
+    \addtocounter{nbcol}{-2}
+
+    \def\tablehead{%
+    \multicolumn{2}{c}{} & \multicolumn{\thenbcol}{c}{{\color{red}\textbf{#2}}}\\\cline{3-\thenbcoltwo} \multicolumn{1}{c}{}&}
+    %
+        \foreach \lhs in {#4}{
+              \protected@xappto\tablehead{ & {\color{red}\textit{\lhs}}}
+    }
+
+      %\addtocounter{nbcol}{2}
+    %\protected@xappto\tableheader{ \\\cline{3-\thenbcol}}
+    %\addtocounter{nbcol}{-2}
+    \def\tabledata{\multirow{\thenblin}*{{\color{blue}\textbf{#1}}}}% reset \tabledata
+
+        \setcounter{contest}{0}
+        \foreach \j in {#3}{
+          \addtocounter{contest}{1}
+              \protected@xappto\tabledata{& {\color{blue}\textit{\j}}}
+              \setcounter{contpay}{0}
+              \foreach \l in {#5}{
+                \addtocounter{contpay}{1}
+                \ifnum \thecontest=\thecontpay{     
+                  \foreach \lhs/\rhs in \l {% build table data from #1
+                    \protected@xappto\tabledata{ & {\color{blue}\lhs},\;{\color{red}\rhs}}
+                    }
+                  \gappto\tabledata{\\}
+                }
+                \else{}\fi
+             }
+        }
+
+        \begin{table}[H]
+          \centering
+          \begin{tabular}{c|c|*{\thenbcol}{c}|}
+              \tablehead\\\cline{2-\thenbcoltwo}
+              \tabledata\cline{2-\thenbcoltwo}
+          \end{tabular}
+
+        \end{table}
+}
+\makeatother
+
+
+\newenvironment{economics_diagram}[4]{
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+              scale only axis, 
+              grid=major, 
+              grid style={dashed, gray!20},
+              %minor x tick num=5,
+              %minor y tick num=5,
+              axis x line=center,
+              axis y line=center, 
+              xlabel style={below right},
+              ylabel style={above left},
+              xmin=0,
+              ymin=0,
+              xlabel={#1}, %Variável
+              ylabel={#2}, %Variável           
+              xmax={#3*1.05},  
+              ymax={#4*1.05}
+              ]
+              \path [name path=xaxis]
+                      (\pgfkeysvalueof{/pgfplots/xmin},0) --
+                      (\pgfkeysvalueof{/pgfplots/xmax},0);
+                      
+              \pgfplotsset{domain = 0:{#3*1.05}};
+
+        }{
+        \end{axis}
+    \end{tikzpicture}
+\end{figure}
+}
+
+\newenvironment{edgeworth_box}[4]{
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+              scale only axis, 
+              grid=major, 
+              grid style={dashed, gray,opacity=.2},
+              %minor x tick num=5,
+              %minor y tick num=5,
+              xmin=0,
+              ymin=0,
+              xlabel={#1}, %Variável
+              ylabel={#2}, %Variável           
+              xmax={#3},  
+              ymax={#4},
+              view={0}{90}
+              ] 
+              \pgfplotsset{domain = 0:{max(#3,#4)*1.05}};
+            \addplot[color=black,mark=*,mark size = 1] (0,0) node[above right] {Alice};           
+            \addplot[color=black,mark=*,mark size = 1] (#3,#4) node[below left] {Bob};
+         
+        }{
+        \end{axis}
+    \end{tikzpicture}
+\end{figure}
+}
+
+
+\newcommand{\addLabel}[3]{
+    \node at (#1,#2) {\footnotesize #3};
+ }
+
+\NewDocumentCommand{\addIC}{O{red}O{red}mm}{
+    \addplot3 [
+    name path global=#2,
+    thick,
+    contour gnuplot={
+        levels=0,
+        labels=false,
+        draw color=#1
+    },
+    samples=25
+    ] {#3-(#4)};
+}
+
+\NewDocumentCommand{\addPlot}{O{red}O{red}m}{
+    \addplot[name path=#1,samples=50,#2,thick,smooth]{#3};
+}
+
+\NewDocumentCommand{\addArea}{O{red}mmm}{
+    \addplot[#1, opacity=0.2] fill between [of=#2 and #3, soft clip={domain=#4}];
+}
+
+\NewDocumentCommand{\addDot}{O{}O{below left}smm}{
+    \addplot[color=black,mark=*,mark size = 1] (#4,#5) node [#2] {\footnotesize #1};
+    \IfBooleanTF{#3}{}{\draw[dotted,thick] (0,#5)--(#4,#5) --(#4,0);}
+}
+
+\NewDocumentCommand{\addVector}{O{0,0}O{}m}{
+    \draw[thick,->] (#1)--(#3) node[anchor=north west] {#2};
+}
+
+\newenvironment{landscape}{
+    \newpage
+    \KOMAoptions{paper=landscape,pagesize}
+    }{
+    \recalctypearea
+    \KOMAoptions{paper=portrait,pagesize}
+    \recalctypearea
+    }

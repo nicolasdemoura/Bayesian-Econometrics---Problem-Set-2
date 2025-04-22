@@ -1,0 +1,122 @@
+Propose a MCMC sampler for the model parameters.
+
+\section{MCMC Sampling Algorithm}
+
+We implement a Metropolis-Hastings within Gibbs sampler to draw from the joint posterior distribution of the model parameters and latent states. The algorithm iteratively updates each block of parameters conditional on the others. Let $\mathbf{\beta}_{1:T}$ denote the sequence of latent states and let $\mathbf{y}_{1:T}$ denote the observed yields.
+
+At each iteration $s$, we sample:
+
+\begin{align*}
+\mathbf{\beta}_{1:T}^{(s)} &\sim p(\mathbf{\beta}_{1:T} \mid \mathbf{y}_{1:T}, \mu^{(s-1)}, A^{(s-1)}, Q^{(s-1)}, H^{(s-1)}, \lambda^{(s-1)}) \\
+\end{align*}
+
+We sample the full path of latent states $\mathbf{\beta}_t$ using Forward Filtering Backward Sampling (FFBS). The state-space system is constructed as:
+
+\textbf{Observation equation:}
+
+\begin{align*}
+\mathbf{y}_t &= \Lambda_t(\lambda) \mathbf{\beta}_t + \epsilon_t, \quad \epsilon_t \sim N(0, H) \\
+\end{align*}
+
+\textbf{State equation:}
+
+\begin{align*}
+\mathbf{\beta}_t &= \mu + A (\mathbf{\beta}_{t-1} - \mu) + \eta_t, \quad \eta_t \sim N(0, Q) \\
+\end{align*}
+
+Sampling is performed using \texttt{simulateSSM} from the KFAS package, conditional on current parameter values.
+
+(b) Mean vector $\mu^{(s)} \sim p(\mu \mid \mathbf{\beta}_{1:T}^{(s)}, A^{(s-1)}, Q^{(s-1)})$
+
+Conditional on the latent states and transition matrix $A$, we derive the full conditional for $\mu$ as:
+
+\begin{align*}
+\mu \mid \cdot &\sim N(m_n, V_n)
+\end{align*}
+
+where:
+
+\begin{align*}
+V_n &= \left(V_0^{-1} + (T-1) Q^{-1}\right)^{-1}, \\
+m_n &= V_n \left(V_0^{-1} m_0 + Q^{-1} \sum_{t=2}^{T} \left[\mathbf{\beta}_t - A(\mathbf{\beta}_{t-1} - \mu)\right] \right)
+\end{align*}
+
+This is a standard Bayesian regression posterior for a normal linear model.
+
+(c) Transition matrix $A^{(s)} \sim p(A \mid \mathbf{\beta}_{1:T}^{(s)}, \mu^{(s)}, Q^{(s-1)})$
+
+We propose a new value $A'$ from a random-walk Metropolis step on the unconstrained vector $\text{vec}(A)$, with normal proposal distribution:
+
+\begin{align*}
+\text{vec}(A') &\sim N(\text{vec}(A), \Sigma_A)
+\end{align*}
+
+To enforce stationarity, we rescale eigenvalues of $A'$ if necessary. The acceptance probability is computed as:
+
+\begin{align*}
+\alpha &= \min\left(1, \frac{p(\mathbf{\beta}_{2:T} \mid \mathbf{\beta}_{1:T-1}, \mu, A', Q)}{p(\mathbf{\beta}_{2:T} \mid \mathbf{\beta}_{1:T-1}, \mu, A, Q)} \cdot \frac{p(A')}{p(A)} \right)
+\end{align*}
+
+with a prior:
+
+\begin{align*}
+\text{vec}(A) &\sim N(0, \sigma_A^2 \cdot I_9)
+\end{align*}
+
+(d) Innovation covariance matrix $Q^{(s)} \sim p(Q \mid \mathbf{\beta}_{1:T}^{(s)}, \mu^{(s)}, A^{(s)})$
+
+The innovations are computed as:
+
+\begin{align*}
+\eta_t &= \mathbf{\beta}_t - \mu - A(\mathbf{\beta}_{t-1} - \mu), \quad t=2, \dots, T
+\end{align*}
+
+Given a conjugate prior $Q \sim IW(\nu_Q, S_Q)$, the posterior is:
+
+\begin{align*}
+Q &\sim IW(\nu_Q + T - 1, S_Q + \sum_{t=2}^{T} \eta_t \eta_t^T)
+\end{align*}
+
+We include eigenvalue rescaling to maintain numerical stability.
+
+(e) Observation variances $H^{(s)} = \text{diag}(h_1^{(s)}, \dots, h_N^{(s)}) \sim p(H \mid \mathbf{y}_{1:T}, \mathbf{\beta}_{1:T}^{(s)}, \lambda^{(s-1)})$
+
+Assuming conditional independence across maturities and a conjugate inverse-gamma prior:
+
+\begin{align*}
+h_i^{-1} &\sim G(3, 1)
+\end{align*}
+
+We compute the residuals:
+
+\begin{align*}
+e_t &= \mathbf{y}_t - \Lambda_t(\lambda) \mathbf{\beta}_t
+\end{align*}
+
+\begin{align*}
+h_i^{-1} &\sim G\left(3 + \frac{T}{2}, 1 + \frac{1}{2} \sum_{t=1}^{T} e_{ti}^2\right)
+\end{align*}
+
+Each $h_i$ is sampled independently.
+
+(f) Decay parameter $\lambda^{(s)} \sim p(\lambda \mid \mathbf{y}_{1:T}, \mathbf{\beta}_{1:T}^{(s)}, H^{(s)})$
+
+We perform a Metropolis-Hastings step on $\log(\lambda)$, using a log-normal proposal:
+
+\begin{align*}
+\log(\lambda') &\sim N(\log(\lambda), \sigma_\lambda^2)
+\end{align*}
+
+The log-posterior is:
+
+\begin{align*}
+\log p(\lambda \mid \cdot) &\propto \sum_{t=1}^{T} \log N(\mathbf{y}_t; \Lambda_t(\lambda) \mathbf{\beta}_t, H) + \log G(\lambda; \alpha, \beta) + \log \left| \frac{\partial \lambda}{\partial \log \lambda} \right|
+\end{align*}
+
+where the last term is the Jacobian correction. We assume:
+
+\begin{align*}
+\lambda &\sim G(4, 50)
+\end{align*}
+
+reflecting prior knowledge from \citet{diebold2006macroeconomy}.

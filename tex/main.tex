@@ -1,0 +1,74 @@
+% --- Set document class and font size ---
+
+\documentclass[12pt]{article}
+
+% --- Package imports ---
+\input{packages}
+\input{preamble}
+\input{nicoeconomics}
+
+
+% Create a question environment
+\newenvironment{questions}{\begin{enumerate}}{\end{enumerate}}
+\newcommand{\question}{\item}
+
+\usepackage{fancyhdr}
+
+% Include a line underneath the header, no footer line
+\pagestyle{fancy}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Left header text: course name/assignment number
+\lhead{FGV EESP\\CMCD}
+
+% Right header text: your name
+\chead{Nicolas Goulart de Moura}
+% Right header text: your name
+\rhead{Bayesian Econometrics\\\today}
+
+% Do not have indent paragraphs
+\setlength\parindent{0pt}
+
+% Do not have headers after the first page
+% --- Document starts here ---
+
+\begin{document}
+\null
+\vspace{-1cm}
+\begin{center}\LARGE \textsc{Problem Set} \# 2 \end{center}
+% --- Main content: import exercises as subfiles ---
+
+
+The term structure of interest rates, known as the yield curve, illustrates the connection between the remaining time until debt securities mature and the yield they offer. Yield curves serve multiple practical purposes, such as pricing different fixed-income securities. They are closely monitored by both market participants and policymakers, as they can provide valuable insights into the market's sentiment regarding the future direction of the policy rate and the overall macroeconomic outlook.
+
+The Nelson-Siegel model, introduced in \cite{nelson1987}, interpolates the yield curve (in terms of spot rates) by the following function:
+
+\begin{equation}
+    s(\tau) = \beta_0 + \beta_1 \left\{\frac{1 - e^{-\tau/\lambda}}{\tau/\lambda}\right\} + \beta_2 \left[\left\{\frac{1 - e^{-\tau/\lambda}}{\tau/\lambda}\right\} - e^{-\tau/\lambda} \right],
+\end{equation}
+
+where $s(\tau)$ is the spot rate at any given time to maturity $\tau$, and $\beta_0, \beta_1, \beta_2$, and $\lambda$ are model parameters. This parametric model captures stylized shapes observed in yield curves, including monotonic, humped, and S-shaped curves. Parameters $\beta_0, \beta_1$, and $\beta_2$ are interpreted as the level, slope, and curvature factors, respectively, as they control the long, short, and medium segments of the curve. The decay parameter $\lambda$ determines the exponential decay rate (in months to maturity) of the slope and curvature factors, in addition to controlling the location of the hump (or trough) associated with the curvature factor.
+
+We construct the term structure of interest rates by taking weekly closing prices of zero-coupon yields released by Bloomberg. We consider the following fixed maturities ($\tau$): 3, 6, 12, 24, 30, 36, 48, 60, 72, 84, 96, 108, 180, 240, and 360 months. The data covers three years, from the first week of 2019 until the last week of 2021.
+
+Let $y_{it}$ denote the weekly yield on date $t$ ($t = 1, \dots, 157$) at maturity $\tau_i$ ($i = 1, \dots, 15$), i.e., $t = 1$ is the 1st week of 2019, $t = 157$ is the last week of 2021, and $\tau_1 = 3, \tau_2 = 6, \dots, \tau_{15} = 360$. The yield is modeled by
+
+\begin{equation}
+    y_{it} = s(\tau_i) + u_{it}, \quad u_{it} \sim \text{NID}(0, \sigma^2).
+\end{equation}
+\newpage \null 
+\begin{questions}
+    \question \input{Body/exercise_01} \newpage \null 
+    \question \input{Body/exercise_02} \newpage \null 
+    \question \input{Body/exercise_03} \newpage \null 
+    \question \input{Body/exercise_04} \newpage \null 
+    \question \input{Body/exercise_05} \newpage \null
+\end{questions}
+
+% --- Bibliography --
+
+\bibliographystyle{chicago}
+\bibliography{references}
+
+\end{document}

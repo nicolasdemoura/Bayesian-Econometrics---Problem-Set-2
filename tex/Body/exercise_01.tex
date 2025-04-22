@@ -1,0 +1,26 @@
+Identify the model parameters and propose a prior distribution for them.
+
+
+We consider the dynamic version of the Nelson-Siegel model proposed by \citet{diebold2006macroeconomy}, where the yield curve is driven by time-varying latent factors $(\beta_{0t}, \beta_{1t}, \beta_{2t})$. The parameters to be estimated are:
+
+\begin{itemize}
+  \item $\boldsymbol{\mu} = (\mu_1, \mu_2, \mu_3)$: unconditional means of the factors;
+  \item $\mathbf{A}$: a $3 \times 3$ autoregressive matrix governing the dynamics of $\boldsymbol{\beta}_t$;
+  \item $\mathbf{Q}$: covariance matrix of the factor innovations;
+  \item $\mathbf{H} = \mathrm{diag}(h_1, \ldots, h_N)$: idiosyncratic variances at each maturity;
+  \item $\lambda$: decay parameter for the Nelson-Siegel loadings.
+\end{itemize}
+
+We assume the following priors, motivated by the empirical findings and modeling strategy in \citet{diebold2006macroeconomy}:
+
+\begin{itemize}
+  \item $\boldsymbol{\mu} \sim \mathcal{N}\left( 
+    \begin{bmatrix} 8 \\ -1.5 \\ 0 \end{bmatrix},\ 
+    100 \cdot \mathbf{I}_3 \right)$;
+  \item $\mathrm{vec}(\mathbf{A}) \sim \mathcal{N}(0, 0.5 \cdot \mathbf{I}_9)$, encouraging moderate persistence and shrinkage;
+  \item $\mathbf{Q} \sim \mathcal{IW}(\nu_Q = 7,\ \mathbf{S}_Q = 0.05 \cdot \mathbf{I}_3)$;
+  \item $h_i^{-1} \sim \mathcal{G}(3,\ 1)$ independently for $i = 1, \dots, N$, centering around 0.33;
+  \item $\lambda \sim \mathcal{G}(4,\ 50)$, implying a prior mean of 0.08 and reflecting the observed peak curvature around 23 months in \citet{diebold2006macroeconomy}.
+\end{itemize}
+
+These priors incorporate empirical structure while maintaining Bayesian regularization. The priors on $\mathbf{Q}$ and $\mathbf{H}$ ensure well-identified variance components. The prior on $\lambda$ guarantees positivity and shrinks toward economically reasonable decay speeds, consistent with prior studies and guidance from \citet{koop2010bayesian}.
